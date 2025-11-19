@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MCP Web Search Client</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        #chat-box {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .user {
+            color: blue;
+            text-align: right;
+            margin: 5px 0;
+        }
+
+        .bot {
+            color: green;
+            text-align: left;
+            margin: 5px 0;
+        }
+
+        .loading {
+            color: gray;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>🤖 MCP 联网助手</h2>
+    <div id="chat-box"></div>
+    <input type="text" id="input-box" placeholder="输入问题，例如：现在的比特币价格？" style="width: 80%;" />
+    <button onclick="sendMessage()">发送</button>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('input-box');
+            const chatBox = document.getElementById('chat-box');
+            const text = input.value;
+            if (!text) return;
+
+            // 显示用户消息
+            chatBox.innerHTML += `<div class="user">你: ${text}</div>`;
+            input.value = '';
+
+            // 显示加载状态
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="loading">思考与搜索中...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // 请求后端 API
+                const res = await fetch('http://localhost:8000/chat', {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await res.json();
+
+                // 移除加载，显示回复
+                document.getElementById(loadingId).remove();
+                chatBox.innerHTML += `<div class="bot">助手: ${data.response}</div>`;
+            } catch (e) {
+                document.getElementById(loadingId).innerText = "Error: " + e;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
